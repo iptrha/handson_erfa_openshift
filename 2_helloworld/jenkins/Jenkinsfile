@@ -1,74 +1,79 @@
-node ()
-{
-  stage ( "build" )
-  {
+try {
+     timeout(time: 20, unit: 'MINUTES') {
+        def appName="test"
+        def project=""
+        node {
+          stage("Initialize") {
+            project = env.PROJECT_NAME
+            echo "using project " + project
+          }
+        }
+        node("maven") {
+          stage("Checkout") {
+            git url: "https://github.com/iptrha/handson_erfa_openshift.git", branch: "master"
+          }
 
-    git branch: params.GIT_BRANCH, url: GIT_URL
+          stage ( "Build" ) {
+            sh "oc apply -f 2_helloworld/openshift/imagestream.yml"
+            sh "oc apply -f 2_helloworld/openshift/buildconfig.yml"
 
-    sh "oc project build"
+            openshiftBuild bldCfg: 'helloworld'
+            openshiftVerifyBuild bldCfg: 'helloworld'
+          }
 
-    sh "oc apply -f 4_helloworld/openshift/imagestream.yml"
+          stage ( "Deploy to DEVL" )
+          {
+              // create deploymentconfig, route and service from template for devl stage
+              sh "oc process -f 2_helloworld/openshift/application-template.yml STAGE=devl | oc apply -f -"
 
-    sh "oc apply -f 4_helloworld/openshift/buildconfig.yml"
+              // we have to set the docker image after the fact because otherwise it's dependent on the project name
+              sh "oc set image dc/helloworld-devl helloworld-devl=helloworld:latest --source=istag"
 
-    sh "oc start-build helloworld --wait"
+              // Deploy and verify deployment
+              openshiftDeploy depCfg: 'helloworld-devl'
+              openshiftVerifyDeployment depCfg: 'helloworld-devl'
+
+              // do a very simple smoketest
+              sh "curl -vk http://helloworld-devl-rha-example.apps.devocp.netcloud.cloud"
+
+          }
+
+          stage ( "Deploy to TEST" )
+          {
+              // create deploymentconfig, route and service from template for test stage
+              sh "oc process -f 2_helloworld/openshift/application-template.yml STAGE=test | oc apply -f -"
+
+              // we have to set the docker image after the fact because otherwise it's dependent on the project name
+              sh "oc set image dc/helloworld-test helloworld-test=helloworld:latest --source=istag"
+
+              // Deploy and verify deployment
+              openshiftDeploy depCfg: 'helloworld-test'
+              openshiftVerifyDeployment depCfg: 'helloworld-test'
+
+              // do a very simple smoketest
+              sh "curl -vk http://helloworld-test-rha-example.apps.devocp.netcloud.cloud"
+          }
+
+          stage ( "Deploy to PROD" )
+          {
+              // create deploymentconfig, route and service from template for prod stage
+              sh "oc process -f 2_helloworld/openshift/application-template.yml STAGE=prod | oc apply -f -"
+
+              // we have to set the docker image after the fact because otherwise it's dependent on the project name
+              sh "oc set image dc/helloworld-prod helloworld-prod=helloworld:latest --source=istag"
+
+              // Deploy and verify deployment
+              openshiftDeploy depCfg: 'helloworld-prod'
+              openshiftVerifyDeployment depCfg: 'helloworld-prod'
+
+              // do a very simple smoketest
+              sh "curl -vk http://helloworld-prod-rha-example.apps.devocp.netcloud.cloud"
+          }
+        }
+     }
+  } catch (err) {
+     echo "in catch block"
+     echo "Caught: ${err}"
+     currentBuild.result = 'FAILURE'
+     throw err
   }
-
-  stage ( "deploy to devl" )
-  {
-    sh "oc project helloworld-devl"
-
-    sh "oc apply -f 4_helloworld/openshift/service.yml"
-
-    sh "oc apply -f 4_helloworld/openshift/route.yml"
-
-    sh "oc apply -f 4_helloworld/openshift/deploymentconfig.yml"
-
-    //sh "oc rollout latest helloworld"
-    sh "oc rollout status deploymentconfig/helloworld"
-
-    sh "sleep 20"
-    sh "curl -vk http://helloworld-helloworld-devl.${OPENSHIFT_URL}.nip.io/"
-  }
-
-  stage ( "deploy to test" )
-  {
-    sh "oc project helloworld-test"
-
-    sh "oc apply -f 4_helloworld/openshift/service.yml"
-
-    sh "oc apply -f 4_helloworld/openshift/route.yml"
-
-    sh "oc apply -f 4_helloworld/openshift/deploymentconfig.yml"
-
-    //sh "oc rollout latest helloworld"
-    sh "oc rollout status deploymentconfig/helloworld"
-
-    sh "sleep 20"
-    sh "curl -vk http://helloworld-helloworld-test.${OPENSHIFT_URL}.nip.io/"
-  }
-}
-
-stage ( "manual quality gate" )
-{
-  input ( message: "deploy to prod?" )
-}
-
-stage ( "deploy to prod" )
-{
-  node ()
-  {
-    git branch: params.GIT_BRANCH, url: GIT_URL
-
-    sh "oc project helloworld-prod"
-
-    sh "oc apply -f 4_helloworld/openshift/service.yml"
-
-    sh "oc apply -f 4_helloworld/openshift/route.yml"
-
-    sh "oc apply -f 4_helloworld/openshift/deploymentconfig.yml"
-
-    //sh "oc rollout latest helloworld"
-    sh "oc rollout status deploymentconfig/helloworld"
-  }
-}
