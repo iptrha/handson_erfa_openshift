@@ -1,3 +1,3 @@
 #! /bin/bash
 
-oc apply -f ../openshift/pipeline.yml
+oc apply -f 2_helloworld/openshift/pipeline.yml
