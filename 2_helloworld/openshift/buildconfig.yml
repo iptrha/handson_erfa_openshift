@@ -9,14 +9,13 @@ spec:
     type: Git
     git:
       ref: master
-      uri: 'https://github.com/iptrha/openshift_techbier.git'
-    contextDir: 4_helloworld
+      uri: 'https://github.com/iptrha/handson_erfa_openshift.git'
+    contextDir: 2_helloworld
   strategy:
     type: Source
     sourceStrategy:
       from:
         kind: ImageStreamTag
-        namespace: build
         name: 's2i-openjdk:latest'
   output:
     to:
