@@ -25,7 +25,7 @@ objects:
             deploymentconfig: helloworld-${STAGE}
         spec:
           containers:
-          - image:
+          - image: placeholder
             imagePullPolicy: Always
             name: helloworld-${STAGE}
             ports:
