@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: s2i-openjdk
+  labels:
+    app: s2i-openjdk
+spec:
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: https://github.com/iptrha/handson_erfa_openshift
+    contextDir: 1_s2i-openjdk_setup/docker
+  strategy:
+    type: Docker
+  output:
+    to:
+      kind: ImageStreamTag
+      name: s2i-openjdk:latest
+  resources: {}

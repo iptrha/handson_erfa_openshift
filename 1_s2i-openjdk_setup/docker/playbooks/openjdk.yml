@@ -1,0 +1,27 @@
+- hosts: localhost
+  vars:
+    java_version: "1.8.0"
+    maven_version: "3.3.9"
+  tasks:
+  - name: install openjdk
+    package:
+      name: "java-{{ java_version }}-openjdk"
+      state: "latest"
+      use: yum
+  - name: install openjdk sdk
+    package:
+      name: "java-{{ java_version }}-openjdk-devel"
+      state: "latest"
+      use: yum
+  - name: download maven tarball
+    get_url:
+      url: https://archive.apache.org/dist/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz
+      dest: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
+  - name: unpack maven tarball
+    unarchive:
+      src: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
+      dest: /tmp
+  - name: delete maven tarball
+    file:
+      path: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
+      state: absent

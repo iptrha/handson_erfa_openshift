@@ -1,0 +1,39 @@
+#!/bin/bash -e
+#
+# S2I assemble script for the 's2i-openjdk' image.
+# The 'assemble' script builds your application source so that it is ready to run.
+#
+# For more information refer to the documentation:
+#	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
+#
+
+# Remark: Working Dir is /opt/app-root/src
+
+# If the 's2i-openjdk' assemble script is executed with the '-h' flag, print the usage.
+if [[ "$1" == "-h" ]]; then
+	exec /usr/libexec/s2i/usage
+fi
+
+# Restore artifacts from the previous build (if they exist).
+#
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring build artifacts..."
+  mv /tmp/artifacts/. ./
+fi
+
+echo "---> Installing application source..."
+cp -Rf /tmp/src/. ./
+
+echo "---> Building application from source..."
+JAVA_VERSION=1.8.0
+MAVEN_VERSION=3.3.9
+
+export M2_HOME=/tmp/apache-maven-${MAVEN_VERSION}
+export JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}
+
+$M2_HOME/bin/mvn clean package
+
+echo "---> Copy artifact..."
+ARTIFACT=$(ls ./target/*.jar)
+
+cp $ARTIFACT ../artifact.jar
