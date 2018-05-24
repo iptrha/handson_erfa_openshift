@@ -16,9 +16,9 @@ spec:
     sourceStrategy:
       from:
         kind: ImageStreamTag
-        name: 's2i-openjdk:latest'
+        name: s2i-openjdk:latest
   output:
     to:
       kind: ImageStreamTag
-      name: 'helloworld:latest'
+      name: helloworld:latest
   resources: {}
