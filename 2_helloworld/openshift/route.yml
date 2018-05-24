@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Route
+metadata:
+  name: helloworld
+spec:
+  port:
+    targetPort: 8080-tcp
+  to:
+    kind: Service
+    name: helloworld
+    weight: 100
+  wildcardPolicy: None

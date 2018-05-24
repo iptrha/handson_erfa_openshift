@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: helloworld
+  labels:
+    app: helloworld
+spec:
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: 'https://github.com/iptrha/openshift_techbier.git'
+    contextDir: 4_helloworld
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        namespace: build
+        name: 's2i-openjdk:latest'
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'helloworld:latest'
+  resources: {}

@@ -1,0 +1,74 @@
+node ()
+{
+  stage ( "build" )
+  {
+
+    git branch: params.GIT_BRANCH, url: GIT_URL
+
+    sh "oc project build"
+
+    sh "oc apply -f 4_helloworld/openshift/imagestream.yml"
+
+    sh "oc apply -f 4_helloworld/openshift/buildconfig.yml"
+
+    sh "oc start-build helloworld --wait"
+  }
+
+  stage ( "deploy to devl" )
+  {
+    sh "oc project helloworld-devl"
+
+    sh "oc apply -f 4_helloworld/openshift/service.yml"
+
+    sh "oc apply -f 4_helloworld/openshift/route.yml"
+
+    sh "oc apply -f 4_helloworld/openshift/deploymentconfig.yml"
+
+    //sh "oc rollout latest helloworld"
+    sh "oc rollout status deploymentconfig/helloworld"
+
+    sh "sleep 20"
+    sh "curl -vk http://helloworld-helloworld-devl.${OPENSHIFT_URL}.nip.io/"
+  }
+
+  stage ( "deploy to test" )
+  {
+    sh "oc project helloworld-test"
+
+    sh "oc apply -f 4_helloworld/openshift/service.yml"
+
+    sh "oc apply -f 4_helloworld/openshift/route.yml"
+
+    sh "oc apply -f 4_helloworld/openshift/deploymentconfig.yml"
+
+    //sh "oc rollout latest helloworld"
+    sh "oc rollout status deploymentconfig/helloworld"
+
+    sh "sleep 20"
+    sh "curl -vk http://helloworld-helloworld-test.${OPENSHIFT_URL}.nip.io/"
+  }
+}
+
+stage ( "manual quality gate" )
+{
+  input ( message: "deploy to prod?" )
+}
+
+stage ( "deploy to prod" )
+{
+  node ()
+  {
+    git branch: params.GIT_BRANCH, url: GIT_URL
+
+    sh "oc project helloworld-prod"
+
+    sh "oc apply -f 4_helloworld/openshift/service.yml"
+
+    sh "oc apply -f 4_helloworld/openshift/route.yml"
+
+    sh "oc apply -f 4_helloworld/openshift/deploymentconfig.yml"
+
+    //sh "oc rollout latest helloworld"
+    sh "oc rollout status deploymentconfig/helloworld"
+  }
+}
