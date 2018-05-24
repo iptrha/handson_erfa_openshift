@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: redis-template
+  name: helloworld
 objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -25,9 +25,9 @@ objects:
             deploymentconfig: helloworld-${STAGE}
         spec:
           containers:
-          - image: helloworld:latest
+          - image:
             imagePullPolicy: Always
-            name: helloworld
+            name: helloworld-${STAGE}
             ports:
             - containerPort: 8080
               protocol: TCP
@@ -38,6 +38,35 @@ objects:
           securityContext: {}
           terminationGracePeriodSeconds: 30
     status: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: helloworld
+      name: helloworld-${STAGE}
+    spec:
+      ports:
+      - name: 8080-tcp
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+      selector:
+        deploymentconfig: helloworld-${STAGE}
+      sessionAffinity: None
+      type: ClusterIP
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      name: helloworld-${STAGE}
+    spec:
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: helloworld-${STAGE}
+        weight: 100
+      wildcardPolicy: None
+
 parameters:
 - name: STAGE
   value: devl
