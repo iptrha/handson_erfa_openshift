@@ -1,6 +1,5 @@
 try {
      timeout(time: 20, unit: 'MINUTES') {
-        def appName="test"
         def project=""
         node {
           stage("Initialize") {
@@ -18,16 +17,12 @@ try {
             sh "oc apply -f 2_helloworld/openshift/buildconfig.yml"
 
             openshiftBuild bldCfg: 'helloworld'
-            openshiftVerifyBuild bldCfg: 'helloworld'
           }
 
           stage ( "Deploy to DEVL" )
           {
               // create deploymentconfig, route and service from template for devl stage
-              sh "oc process -f 2_helloworld/openshift/application-template.yml STAGE=devl | oc apply -f -"
-
-              // we have to set the docker image after the fact because otherwise it's dependent on the project name
-              sh "oc set image dc/helloworld-devl helloworld-devl=helloworld:latest --source=istag"
+              sh "oc process -f 2_helloworld/openshift/application-template.yml STAGE=devl PROJECT_NAME=" + project + " | oc apply -f -"
 
               // Deploy and verify deployment
               openshiftDeploy depCfg: 'helloworld-devl'
