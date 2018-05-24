@@ -5,14 +5,7 @@ metadata:
 spec:
   source:
     git:
-      uri: "https://github.com/iptrha/openshift_techbier.git"
+      uri: "https://github.com/iptrha/handson_erfa_openshift.git"
   strategy:
     jenkinsPipelineStrategy:
-      jenkinsfilePath: 4_helloworld/jenkins/Jenkinsfile
-      env:
-        - name: GIT_URL
-          value: "https://github.com/iptrha/openshift_techbier.git"
-        - name: GIT_BRANCH
-          value: "master"
-        - name: OPENSHIFT_URL
-          value: 192.168.64.5
+      jenkinsfilePath: 2_helloworld/jenkins/Jenkinsfile
