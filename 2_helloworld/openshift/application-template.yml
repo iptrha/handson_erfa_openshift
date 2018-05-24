@@ -70,3 +70,5 @@ objects:
 parameters:
 - name: STAGE
   value: devl
+- name: PROJECT_NAME
+  VALUE: rha-example
