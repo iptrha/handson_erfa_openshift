@@ -1,0 +1,26 @@
+#!/bin/sh -e
+
+pushd /tmp/src
+
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+    echo "---> Restoring build artifacts (node_modules)"
+    mv /tmp/artifacts/* .
+fi
+
+echo "---> Installing NPM Dependencies (with dev)"
+npm install
+npm install --only=dev
+
+echo "---> Building Angular CLI Application"
+./node_modules/@angular/cli/bin/ng build --prod
+
+popd
+
+echo "---> Installing application to web container"
+cp -Rf /tmp/src/dist/. ./
+
+#echo "---> Removing application source"
+#rm -rf /tmp/src
+
+# Fix source directory permissions
+fix-permissions ./

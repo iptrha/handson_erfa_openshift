@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: s2i-angular
+  labels:
+    app: s2i-angular
+spec:
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: https://github.com/iptrha/handson_erfa_openshift
+    contextDir: 3_s2i-angular_setup/docker
+  strategy:
+    type: Docker
+  output:
+    to:
+      kind: ImageStreamTag
+      name: s2i-angular:latest
+  resources: {}
